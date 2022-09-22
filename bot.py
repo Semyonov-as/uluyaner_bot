@@ -8,7 +8,7 @@ from re import M
 from sqlite3 import adapt
 from aiogram import Bot, Dispatcher, executor, types
 
-from config import BOT_TOKEN
+from config import BOT_TOKEN, SWEEHEART_ID, MY_ID
 
 logging.basicConfig(level=logging.INFO)
 
@@ -16,6 +16,7 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
 data = []
+Users = []
 
 with open('UsersData.json', 'r') as f:
     data = json.load(f)
@@ -29,7 +30,7 @@ async def send_welcome(message: types.Message):
     """
     This handler will be called when user sends `/start` or `/help` command
     """
-
+    print(message.from_user)
     await message.reply("""Hey dude!
 I'm bot created for sweetheart Uluyaner.
 I remind to take pills. To use me type command reminder and time to remind '9:00' """)
@@ -71,6 +72,19 @@ async def regular_pill_reminder(u_id, time, timestep):
         await pill_reminder(u_id, time_dt.isoformat(' ', "minutes").split()[1])
         time_dt += time_step
 
-if __name__ == '__main__':
+async def main():
+    time = ['08:30', '15:30', '23:00']
+    tasks = []
 
-    executor.start_polling(dp, skip_updates=True)
+    for t in time:
+        tasks.append(asyncio.ensure_future(regular_pill_reminder(SWEEHEART_ID, t, 60*24)))
+        tasks.append(asyncio.ensure_future(regular_pill_reminder(MY_ID, t, 60*24)))
+
+    for f in tasks:
+        await f
+
+if __name__ == '__main__':
+    ioloop = asyncio.get_event_loop()
+    ioloop.run_until_complete(main())
+
+    # executor.start_polling(dp, skip_updates=True)
